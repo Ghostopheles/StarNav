@@ -14,3 +14,10 @@ ignore:
   - Libs/*/.pkgmeta
   - CHANGELOG.md
   - README.md
+
+externals:
+  Libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
+  Libs/LibAdvFlight: https://github.com/Ghostopheles/LibAdvFlight
+
+embedded-libraries:
+  - libadvflight

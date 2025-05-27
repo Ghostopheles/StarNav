@@ -1,0 +1,36 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Meorawr/wow-ui-schema/main/UI.xsd">
+
+    <Script file="CompassBar.lua" />
+
+    <Frame name="CompassBar" mixin="CompassBarMixin" parent="UIParent">
+        <Size x="800" y="25" />
+        <Anchors>
+            <Anchor point="TOP" y="-50" />
+        </Anchors>
+
+        <Layers>
+            <Layer level="ARTWORK">
+                <Line parentKey="Line" thickness="2">
+                    <StartAnchor relativePoint="LEFT" />
+                    <EndAnchor relativePoint="RIGHT" />
+                </Line>
+
+                <FontString parentKey="CurrentHeadingText" inherits="GhostCleanFont"
+                    justifyH="CENTER">
+                    <Size x="40" y="15" />
+                    <Anchors>
+                        <Anchor point="BOTTOM" relativeKey="$parent.Line" relativePoint="TOP" y="3" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnUpdate method="OnUpdate" />
+            <OnEvent method="OnEvent" />
+        </Scripts>
+    </Frame>
+
+</Ui>
