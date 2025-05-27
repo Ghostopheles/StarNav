@@ -80,7 +80,9 @@ function CompassBarMixin:OnLoad()
     self.MajorLinePool = CreateLinePool(self, MAJOR_LINE_THICKNESS);
     self.MinorLinePool = CreateLinePool(self, MINOR_LINE_THICKNESS);
     self.LabelFontStringPool = CreateFontStringPool(self, "GhostCleanFontSmall");
-    self.AreaPOIIconPool = CreateTexturePool(self, "ARTWORK");
+    self.AreaPOIIconPool = CreateTexturePool(self, "ARTWORK", nil, nil, function(_, texture)
+        texture:SetTexture(nil);
+    end);
 
     -- draw a little box around our 'current heading' text
     local function MakeLine()
@@ -205,9 +207,9 @@ function CompassBarMixin:Update()
                 line:SetStartPoint("CENTER", -offsetX, 0);
                 line:SetEndPoint("CENTER", -offsetX, -MAJOR_LINE_HEIGHT);
 
-                local label = self.LabelFontStringPool:Acquire();
-                label:SetText(heading);
-                label:SetPoint("TOP", line, "BOTTOM", 0, -5);
+                --local label = self.LabelFontStringPool:Acquire();
+                --label:SetText(heading);
+                --label:SetPoint("TOP", line, "BOTTOM", 0, -5);
             elseif heading % MINOR_LINE_INCREMENT == 0 then
                 local line = self.MinorLinePool:Acquire();
                 line:SetStartPoint("CENTER", -offsetX, 0);
@@ -229,7 +231,7 @@ function CompassBarMixin:Update()
                         local angle_delta = NormalizeAngle(poiData.NonRoundedAngle - currentHeading);
                         local offset_angle_degrees = (angle_delta > 180) and (angle_delta - 360) or angle_delta;
                         local offset = offset_angle_degrees * spacing_per_deg;
-                        icon:SetPoint("CENTER", self, "CENTER", -offset, -(MAJOR_LINE_HEIGHT + 40));
+                        icon:SetPoint("CENTER", self, "CENTER", -offset, -(MAJOR_LINE_HEIGHT + 20));
                         icon:SetSize(POI_ICON_SIZE, POI_ICON_SIZE);
                         if poiData.TextureIndex then
                             icon:SetTexture("Interface/Minimap/POIIcons");
