@@ -39,9 +39,6 @@ local function CreateColorPicker(setting, tooltip)
     local initializer = Settings.CreateSettingInitializer("StarNavColorSwatchSettingTemplate", data);
     local layout = SettingsPanel:GetLayout(CATEGORY);
     layout:AddInitializer(initializer);
-
-    DevTool:AddData(initializer, "StarNavColorSwatchSettingTemplate");
-
     return initializer;
 end
 
