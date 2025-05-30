@@ -46,7 +46,7 @@ local function CreateLinePool(parent, thickness)
     return CreateObjectPool(CreateLine);
 end
 
-local DEFAULT_FONTSTRING_FONT = "GhostCleanFont";
+local DEFAULT_FONTSTRING_FONT = "GameFontWhite";
 local DEFAULT_FONTSTRING_LAYER = "ARTWORK";
 
 ---@param parent FrameScriptObject
@@ -90,7 +90,7 @@ function CompassBarMixin:OnLoad()
 
     self.MajorLinePool = CreateLinePool(self, MAJOR_LINE_THICKNESS);
     self.MinorLinePool = CreateLinePool(self, MINOR_LINE_THICKNESS);
-    self.LabelFontStringPool = CreateFontStringPool(self, "GhostCleanFontSmall");
+    self.LabelFontStringPool = CreateFontStringPool(self);
     self.AreaPOIIconPool = CreateTexturePool(self, "ARTWORK", nil, nil, function(_, texture)
         texture:SetTexture(nil);
     end);
