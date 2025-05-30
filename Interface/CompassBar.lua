@@ -116,7 +116,7 @@ function CompassBarMixin:OnLoad()
     lineR:SetEndPoint("BOTTOMRIGHT", self.CurrentHeadingText, rightOffsetX, -sideOffsetY);
 
     local topOffsetLeftX = 1;
-    local topOffsetRightX = 3;
+    local topOffsetRightX = 2;
     local lineT = MakeLine();
     lineT:SetStartPoint("TOPLEFT", self.CurrentHeadingText, -topOffsetLeftX, sideOffsetY);
     lineT:SetEndPoint("TOPRIGHT", self.CurrentHeadingText, topOffsetRightX, sideOffsetY);
