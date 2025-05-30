@@ -16,7 +16,7 @@
                     <EndAnchor relativePoint="RIGHT" />
                 </Line>
 
-                <FontString parentKey="CurrentHeadingText" inherits="GhostCleanFont"
+                <FontString parentKey="CurrentHeadingText" inherits="GameFontWhite"
                     justifyH="CENTER">
                     <Size x="40" y="15" />
                     <Anchors>
