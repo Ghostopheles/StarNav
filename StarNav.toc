@@ -1,8 +1,10 @@
-## Interface: 110105
+## Interface: 110107
 ## Title: StarNav
 ## Notes: A cadaverous and celestial navigational aid
 ## Author: Ghostopheles
 ## Version: @project-version@
+## LoadSavedVariablesFirst: 1
+## SavedVariables: StarNavConfig
 
 ## Category-enUS: Map
 ## Category-deDE: Karte
@@ -25,4 +27,9 @@ Libs/LibStub/LibStub.lua
 Libs/LibAdvFlight/lib.xml
 
 StarNav.lua
+
+Core/Events.lua
+Core/SettingsTemplates.xml
+Core/Settings.lua
+
 Interface/CompassBar.xml

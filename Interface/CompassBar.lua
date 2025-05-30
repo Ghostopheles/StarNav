@@ -1,3 +1,7 @@
+local Events = StarNav.Events;
+local Registry = StarNav.Registry;
+local Settings = StarNav.Settings;
+
 local LAF = LibStub:GetLibrary("LibAdvFlight-1.0");
 
 local COMPASS_FOV = 180; -- in degrees
@@ -12,20 +16,26 @@ local POI_ICON_MAX_SCALE = 1;
 local POI_ICON_MIN_ALPHA = 0.25;
 local POI_ICON_MAX_ALPHA = 1;
 
-local DEFAULT_COLOR = CreateColor(0.38, 0.54, 0.78, 1);
-
 local DEFAULT_LINE_THICKNESS = 1;
-local DEFAULT_LINE_COLOR = DEFAULT_COLOR;
 local DEFAULT_LINE_LAYER = "ARTWORK";
+
+local DEFAULT_COLOR = CreateColorFromHexString("ff618ac7");
+
+local function GetLineColor()
+    local setting = Settings.GetSetting("STARNAV_CompassColor");
+    if setting then
+        return CreateColorFromHexString(setting);
+    else
+        return DEFAULT_COLOR;
+    end
+end
 
 ---@param parent FrameScriptObject
 ---@param thickness number?
----@param color ColorMixin?
----@param layer string?
-local function CreateLinePool(parent, thickness, color, layer)
+local function CreateLinePool(parent, thickness)
     thickness = thickness or DEFAULT_LINE_THICKNESS;
-    color = color or DEFAULT_LINE_COLOR;
-    layer = layer or DEFAULT_LINE_LAYER;
+    local color = GetLineColor();
+    local layer = DEFAULT_LINE_LAYER;
     local function CreateLine()
         local line = parent:CreateLine(nil, layer);
         line:SetThickness(thickness);
@@ -75,7 +85,8 @@ local ATLAS_WITH_TEXTURE_KIT_PREFIX = "%s-%s";
 CompassBarMixin = {};
 
 function CompassBarMixin:OnLoad()
-    self.Line:SetColorTexture(DEFAULT_COLOR:GetRGBA());
+    local lineColor = GetLineColor();
+    self.Line:SetColorTexture(lineColor:GetRGBA());
 
     self.MajorLinePool = CreateLinePool(self, MAJOR_LINE_THICKNESS);
     self.MinorLinePool = CreateLinePool(self, MINOR_LINE_THICKNESS);
@@ -85,10 +96,12 @@ function CompassBarMixin:OnLoad()
     end);
 
     -- draw a little box around our 'current heading' text
+    self.HeadingBorderLines = {};
     local function MakeLine()
         local line = self:CreateLine(nil, "ARTWORK");
-        line:SetColorTexture(DEFAULT_COLOR:GetRGBA());
+        line:SetColorTexture(lineColor:GetRGBA());
         line:SetThickness(1.5);
+        tinsert(self.HeadingBorderLines, line);
         return line;
     end
 
@@ -123,6 +136,8 @@ function CompassBarMixin:OnLoad()
     self:RegisterEvent("PLAYER_ENTERING_WORLD");
 
     LAF.RegisterCallback(LAF.Events.ADV_FLYING_ENABLE_STATE_CHANGED, self.OnAdvFlyingEnableStateChanged, self);
+
+    Registry:RegisterCallback(Events.SETTING_CHANGED, self.OnSettingChanged, self);
 end
 
 function CompassBarMixin:OnUpdate(deltaTime)
@@ -154,6 +169,29 @@ function CompassBarMixin:OnAdvFlyingEnableStateChanged(canGlide)
     end
 end
 
+function CompassBarMixin:OnSettingChanged(variable, value)
+    if variable == "STARNAV_CompassColor" then
+        local color = CreateColorFromHexString(value);
+        self:UpdateColors(color);
+    elseif variable == "STARNAV_ShowQuests" or variable == "STARNAV_ShowAreaPOI" then
+        local forceUpdate = true;
+        self:Update(forceUpdate);
+    end
+end
+
+function CompassBarMixin:UpdateColors(color)
+    self.Line:SetColorTexture(color:GetRGBA());
+    for line in self.MajorLinePool:EnumerateActive() do
+        line:SetColorTexture(color:GetRGBA());
+    end
+    for line in self.MinorLinePool:EnumerateActive() do
+        line:SetColorTexture(color:GetRGBA());
+    end
+    for _, line in ipairs(self.HeadingBorderLines) do
+        line:SetColorTexture(color:GetRGBA());
+    end
+end
+
 function CompassBarMixin:FadeIn()
     self.FadeAnim:Play();
 end
@@ -173,11 +211,11 @@ function CompassBarMixin:GetCurrentHeading()
 end
 
 function CompassBarMixin:ShouldUpdate()
-    return self:IsVisible();
+    return self:IsShown() and self:IsVisible();
 end
 
-function CompassBarMixin:Update()
-    if not self:ShouldUpdate() then
+function CompassBarMixin:Update(forceUpdate)
+    if not self:ShouldUpdate() and not forceUpdate then
         return;
     end
 
@@ -193,7 +231,7 @@ function CompassBarMixin:Update()
 
     local spacing_per_deg = self:GetWidth() / COMPASS_FOV;
     local pois = StarNav.GetPointsOfInterestForCurrentMap();
-    if not pois then
+    if not pois and not forceUpdate then
         return;
     end
     for heading = 0, 359 do

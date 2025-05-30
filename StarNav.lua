@@ -58,6 +58,10 @@ end
 local QuestsDone = {};
 
 local function ShouldShowQuest(quest, uiMapID)
+    if not StarNav.Settings.GetSetting("STARNAV_ShowQuests") then
+        return false;
+    end
+
     if quest.isHidden then
         return false;
     end
@@ -134,23 +138,28 @@ function StarNav.GetPointsOfInterestForMap(uiMapID)
         return;
     end
 
-    local areaPOIIDs = AreaPOICache[uiMapID];
-    if not areaPOIIDs or #areaPOIIDs == 0 then
-        AreaPOICache[uiMapID] = C_AreaPoiInfo.GetAreaPOIForMap(uiMapID);
-        for _, id in ipairs(C_AreaPoiInfo.GetDelvesForMap(uiMapID)) do
-            tinsert(AreaPOICache[uiMapID], id);
-        end
-        for _, id in ipairs(C_AreaPoiInfo.GetDragonridingRacesForMap(uiMapID)) do
-            tinsert(AreaPOICache[uiMapID], id);
-        end
-        for _, id in ipairs(C_AreaPoiInfo.GetEventsForMap(uiMapID)) do
-            tinsert(AreaPOICache[uiMapID], id);
-        end
-        for _, id in ipairs(C_AreaPoiInfo.GetQuestHubsForMap(uiMapID)) do
-            tinsert(AreaPOICache[uiMapID], id);
-        end
-
+    local areaPOIIDs;
+    if StarNav.Settings.GetSetting("STARNAV_ShowAreaPOI") then
         areaPOIIDs = AreaPOICache[uiMapID];
+        if not areaPOIIDs or #areaPOIIDs == 0 then
+            AreaPOICache[uiMapID] = C_AreaPoiInfo.GetAreaPOIForMap(uiMapID);
+            for _, id in ipairs(C_AreaPoiInfo.GetDelvesForMap(uiMapID)) do
+                tinsert(AreaPOICache[uiMapID], id);
+            end
+            for _, id in ipairs(C_AreaPoiInfo.GetDragonridingRacesForMap(uiMapID)) do
+                tinsert(AreaPOICache[uiMapID], id);
+            end
+            for _, id in ipairs(C_AreaPoiInfo.GetEventsForMap(uiMapID)) do
+                tinsert(AreaPOICache[uiMapID], id);
+            end
+            for _, id in ipairs(C_AreaPoiInfo.GetQuestHubsForMap(uiMapID)) do
+                tinsert(AreaPOICache[uiMapID], id);
+            end
+
+            areaPOIIDs = AreaPOICache[uiMapID];
+        end
+    else
+        areaPOIIDs = {};
     end
 
     local headingToPOI = {};
