@@ -112,6 +112,7 @@ function StarNavCompassBarMixin:OnLoad()
 
     -- events
     self:RegisterEvent("PLAYER_ENTERING_WORLD");
+    self:RegisterEvent("ZONE_CHANGED_NEW_AREA");
 
     LAF.RegisterCallback(LAF.Events.ADV_FLYING_ENABLE_STATE_CHANGED, self.OnAdvFlyingEnableStateChanged, self);
 
@@ -136,6 +137,14 @@ function StarNavCompassBarMixin:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading
         elseif not canGlide and self:IsShown() then
             self:Hide();
         end
+    end
+end
+
+function StarNavCompassBarMixin:ZONE_CHANGED_NEW_AREA()
+    if IsInInstance() then
+        self:FadeOut();
+    else
+        self:FadeIn();
     end
 end
 
@@ -220,8 +229,14 @@ function StarNavCompassBarMixin:Update(forceUpdate)
         return;
     end
 
+    if IsInInstance() then
+        self:FadeOut();
+        return;
+    end
+
     local currentHeading = self:GetCurrentHeading();
     if not currentHeading then
+        self:FadeOut();
         return;
     end
 
@@ -236,6 +251,7 @@ function StarNavCompassBarMixin:Update(forceUpdate)
 
     local playerPosX, playerPosY = UnitPosition("player");
     if not (playerPosX and playerPosY) then
+        self:FadeOut();
         return;
     end
     local playerWorldPosition = CreateVector2D(playerPosX, playerPosY);

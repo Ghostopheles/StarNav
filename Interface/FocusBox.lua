@@ -26,8 +26,9 @@ StarNavFocusBoxMixin = {};
 function StarNavFocusBoxMixin:OnLoad()
     -- resize layout stuff
     self.minimumWidth = 125;
-    self.minimumHeight = 75;
-    self.heightPadding = 5;
+    self.minimumHeight = 87;
+    self.widthPadding = 8;
+    self.heightPadding = 8;
 
     self.LabelFontStringPool = CreateFontStringPool(self);
     self.FontStringCache = {};

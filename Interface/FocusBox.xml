@@ -5,7 +5,7 @@
 
     <Frame name="StarNavFocusBoxTemplate" mixin="StarNavFocusBoxMixin" inherits="ResizeLayoutFrame"
         hidden="true" virtual="true">
-        <Size x="125" y="75" />
+        <Size x="125" y="87" />
         <Layers>
             <Layer level="BACKGROUND">
                 <Texture parentKey="FocusArt" atlas="UI-Tuskarr-Highlight-Middle">
