@@ -19,7 +19,7 @@
                         <Anchor point="BOTTOMLEFT" />
                         <Anchor point="BOTTOMRIGHT" />
                         <Anchor point="TOP" relativeKey="$parent.FocusArt" relativePoint="BOTTOM"
-                            y="5" />
+                            y="15" />
                     </Anchors>
                 </Texture>
             </Layer>
