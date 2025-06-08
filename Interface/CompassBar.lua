@@ -28,7 +28,7 @@ local POI_ICON_DECAY_FACTOR = 3;
 local POI_ICON_PADDING = 20;
 
 local POI_FOCUS_BUFFER = 10; -- degrees between heading and POI direction to show label
-local POI_FOCUS_DISTANCE = 0.25; -- distance normalized from 0-1
+local POI_FOCUS_DISTANCE = 0.35; -- distance normalized from 0-1
 local POI_FOCUS_LABEL_FORMAT = "%s [%dm]";
 
 local ATLAS_WITH_TEXTURE_KIT_PREFIX = "%s-%s";
