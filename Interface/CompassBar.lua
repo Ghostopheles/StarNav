@@ -82,9 +82,9 @@ end
 
 ------------
 
-CompassBarMixin = {};
+StarNavCompassBarMixin = {};
 
-function CompassBarMixin:OnLoad()
+function StarNavCompassBarMixin:OnLoad()
     local lineColor = GetLineColor();
     self.Line:SetColorTexture(lineColor:GetRGBA());
 
@@ -140,17 +140,17 @@ function CompassBarMixin:OnLoad()
     Registry:RegisterCallback(Events.SETTING_CHANGED, self.OnSettingChanged, self);
 end
 
-function CompassBarMixin:OnUpdate(deltaTime)
+function StarNavCompassBarMixin:OnUpdate(deltaTime)
     self:Update();
 end
 
-function CompassBarMixin:OnEvent(event, ...)
+function StarNavCompassBarMixin:OnEvent(event, ...)
     if self[event] then
         self[event](self, ...);
     end
 end
 
-function CompassBarMixin:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading)
+function StarNavCompassBarMixin:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading)
     if isInitialLoad or isReloading then
         local canGlide = LAF.IsAdvFlyEnabled();
         if canGlide and not self:IsShown() then
@@ -161,7 +161,7 @@ function CompassBarMixin:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading)
     end
 end
 
-function CompassBarMixin:OnAdvFlyingEnableStateChanged(canGlide)
+function StarNavCompassBarMixin:OnAdvFlyingEnableStateChanged(canGlide)
     if canGlide then
         self:FadeIn();
     else
@@ -176,7 +176,7 @@ local UPDATE_ON = {
     ["STARNAV_ShowInstances"] = true,
 }
 
-function CompassBarMixin:OnSettingChanged(variable, value)
+function StarNavCompassBarMixin:OnSettingChanged(variable, value)
     if variable == "STARNAV_CompassColor" then
         local color = CreateColorFromHexString(value);
         self:UpdateColors(color);
@@ -186,7 +186,7 @@ function CompassBarMixin:OnSettingChanged(variable, value)
     end
 end
 
-function CompassBarMixin:UpdateColors(color)
+function StarNavCompassBarMixin:UpdateColors(color)
     self.Line:SetColorTexture(color:GetRGBA());
     for line in self.MajorLinePool:EnumerateActive() do
         line:SetColorTexture(color:GetRGBA());
@@ -199,15 +199,15 @@ function CompassBarMixin:UpdateColors(color)
     end
 end
 
-function CompassBarMixin:FadeIn()
+function StarNavCompassBarMixin:FadeIn()
     self.FadeAnim:Play();
 end
 
-function CompassBarMixin:FadeOut()
+function StarNavCompassBarMixin:FadeOut()
     self.FadeAnim:Play(true);
 end
 
-function CompassBarMixin:GetCurrentHeading()
+function StarNavCompassBarMixin:GetCurrentHeading()
     local facing = GetPlayerFacing();
     if not facing then
         return 0;
@@ -217,12 +217,12 @@ function CompassBarMixin:GetCurrentHeading()
     return heading;
 end
 
-function CompassBarMixin:ShouldUpdate()
+function StarNavCompassBarMixin:ShouldUpdate()
     return self:IsShown() and self:IsVisible();
 end
 
 local LAST_HEADING;
-function CompassBarMixin:Update(forceUpdate)
+function StarNavCompassBarMixin:Update(forceUpdate)
     if not self:ShouldUpdate() and not forceUpdate then
         return;
     end
@@ -337,16 +337,16 @@ function CompassBarMixin:Update(forceUpdate)
     self.CurrentHeadingText:SetFormattedText("%d", currentHeading);
 end
 
-function CompassBarMixin:NormalizePOIDistance(distance)
+function StarNavCompassBarMixin:NormalizePOIDistance(distance)
     return math.min(distance / POI_ICON_MAX_DISTANCE, 1);
 end
 
-function CompassBarMixin:CalculatePOIScaleFromDistance(normalizedDistance)
+function StarNavCompassBarMixin:CalculatePOIScaleFromDistance(normalizedDistance)
     local decay = math.exp(-normalizedDistance * POI_ICON_DECAY_FACTOR);
     return POI_ICON_MIN_SCALE + (POI_ICON_MAX_SCALE - POI_ICON_MIN_SCALE) * decay;
 end
 
-function CompassBarMixin:CalculatePOIAlphaFromDistance(normalizedDistance)
+function StarNavCompassBarMixin:CalculatePOIAlphaFromDistance(normalizedDistance)
     local decay = math.exp(-normalizedDistance * POI_ICON_DECAY_FACTOR);
     return POI_ICON_MIN_ALPHA + (POI_ICON_MAX_ALPHA - POI_ICON_MIN_ALPHA) * decay;
 end

@@ -3,7 +3,7 @@
 
     <Script file="CompassBar.lua" />
 
-    <Frame name="CompassBar" mixin="CompassBarMixin" parent="UIParent">
+    <Frame name="StarNavCompassBar" mixin="StarNavCompassBarMixin" parent="UIParent">
         <Size x="800" y="25" />
         <Anchors>
             <Anchor point="TOP" y="-50" />
