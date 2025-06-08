@@ -1,32 +1,45 @@
 local Events = StarNav.Events;
+local POIUtil = StarNav.POIUtil;
+local MathUtil = StarNav.MathUtil;
 local Registry = StarNav.Registry;
 local Settings = StarNav.Settings;
 
 local LAF = LibStub:GetLibrary("LibAdvFlight-1.0");
 
+local COMPASS_UPDATE_DEADZONE = 0.25;
 local COMPASS_FOV = 180; -- in degrees
 local HALF_FOV = COMPASS_FOV / 2; -- in degrees
-local MINOR_LINE_INCREMENT = 5; -- degrees between minor lines
+
 local MAJOR_LINE_INCREMENT = 15; -- degrees between major line
+local MAJOR_LINE_HEIGHT = 30;
+local MAJOR_LINE_THICKNESS = 2;
+
+local MINOR_LINE_INCREMENT = 5; -- degrees between minor lines
+local MINOR_LINE_HEIGHT = 15;
+local MINOR_LINE_THICKNESS = 1;
 
 local POI_ICON_SIZE = 32;
-local POI_ICON_MAX_DISTANCE = 800;
+local POI_ICON_MAX_DISTANCE = 1000;
 local POI_ICON_MIN_SCALE = 0.5;
 local POI_ICON_MAX_SCALE = 1;
 local POI_ICON_MIN_ALPHA = 0.25;
 local POI_ICON_MAX_ALPHA = 1;
+local POI_ICON_DECAY_FACTOR = 3;
+local POI_ICON_PADDING = 20;
+
+local POI_FOCUS_BUFFER = 3; -- degrees between heading and POI direction to show label
+local POI_FOCUS_DISTANCE = 0.25; -- distance normalized from 0-1
+local POI_FOCUS_LABEL_FORMAT = "%s [%dm]";
+
+local ATLAS_WITH_TEXTURE_KIT_PREFIX = "%s-%s";
 
 local DEFAULT_LINE_THICKNESS = 1;
 local DEFAULT_LINE_LAYER = "ARTWORK";
-
-local DEFAULT_COLOR = CreateColorFromHexString("ff618ac7");
 
 local function GetLineColor()
     local setting = Settings.GetSetting("STARNAV_CompassColor");
     if setting then
         return CreateColorFromHexString(setting);
-    else
-        return DEFAULT_COLOR;
     end
 end
 
@@ -67,20 +80,7 @@ local function CreateFontStringPool(parent, font, layer)
     return CreateObjectPool(CreateFontString, ResetFontString);
 end
 
-local function NormalizeAngle(degrees)
-    return (degrees % 360 + 360) % 360;
-end
-
 ------------
-
-local MAJOR_LINE_HEIGHT = 30;
-local MAJOR_LINE_THICKNESS = 2;
-
-local MINOR_LINE_HEIGHT = 15;
-local MINOR_LINE_THICKNESS = 1;
-
-local POI_LABEL_BUFFER = 3; -- degrees between heading and POI direction to show label
-local ATLAS_WITH_TEXTURE_KIT_PREFIX = "%s-%s";
 
 CompassBarMixin = {};
 
@@ -91,7 +91,7 @@ function CompassBarMixin:OnLoad()
     self.MajorLinePool = CreateLinePool(self, MAJOR_LINE_THICKNESS);
     self.MinorLinePool = CreateLinePool(self, MINOR_LINE_THICKNESS);
     self.LabelFontStringPool = CreateFontStringPool(self);
-    self.AreaPOIIconPool = CreateTexturePool(self, "ARTWORK", nil, nil, function(_, texture)
+    self.IconPool = CreateTexturePool(self, "ARTWORK", nil, nil, function(_, texture)
         texture:SetTexture(nil);
     end);
 
@@ -169,11 +169,18 @@ function CompassBarMixin:OnAdvFlyingEnableStateChanged(canGlide)
     end
 end
 
+local UPDATE_ON = {
+    ["STARNAV_ShowAreaPOI"] = true,
+    ["STARNAV_ShowQuests"] = true,
+    ["STARNAV_ShowQuestLines"] = true,
+    ["STARNAV_ShowInstances"] = true,
+}
+
 function CompassBarMixin:OnSettingChanged(variable, value)
     if variable == "STARNAV_CompassColor" then
         local color = CreateColorFromHexString(value);
         self:UpdateColors(color);
-    elseif variable == "STARNAV_ShowQuests" or variable == "STARNAV_ShowAreaPOI" then
+    elseif UPDATE_ON[variable] then
         local forceUpdate = true;
         self:Update(forceUpdate);
     end
@@ -214,6 +221,7 @@ function CompassBarMixin:ShouldUpdate()
     return self:IsShown() and self:IsVisible();
 end
 
+local LAST_HEADING;
 function CompassBarMixin:Update(forceUpdate)
     if not self:ShouldUpdate() and not forceUpdate then
         return;
@@ -224,104 +232,122 @@ function CompassBarMixin:Update(forceUpdate)
         return;
     end
 
+    if LAST_HEADING
+        and math.abs(currentHeading - LAST_HEADING) < COMPASS_UPDATE_DEADZONE
+        and not IsPlayerMoving() then
+        return;
+    else
+        LAST_HEADING = currentHeading;
+    end
+
+    local playerPosX, playerPosY = UnitPosition("player");
+    if not (playerPosX and playerPosY) then
+        return;
+    end
+    local playerWorldPosition = CreateVector2D(playerPosX, playerPosY);
+
+    local function ShouldBeVisible(poiData)
+        local worldPos = poiData.WorldPosition;
+
+        local distance = MathUtil.GetDistanceToPosition(playerWorldPosition, worldPos);
+        if distance > POI_ICON_MAX_DISTANCE then
+            return false;
+        end
+
+        local angleToPOI = MathUtil.GetAngleToPosition(playerWorldPosition, worldPos);
+        local angleDelta = MathUtil.GetAngleDelta(currentHeading, angleToPOI);
+        if math.abs(angleDelta) > HALF_FOV then
+            return false;
+        end
+
+        return true;
+    end
+
     self.MajorLinePool:ReleaseAll();
     self.MinorLinePool:ReleaseAll();
     self.LabelFontStringPool:ReleaseAll();
-    self.AreaPOIIconPool:ReleaseAll();
+    self.IconPool:ReleaseAll();
 
-    local spacing_per_deg = self:GetWidth() / COMPASS_FOV;
-    local pois = StarNav.GetPointsOfInterestForCurrentMap();
-    if not pois and not forceUpdate then
-        return;
-    end
-    for heading = 0, 359 do
-        local delta = NormalizeAngle(heading - currentHeading);
-        if delta <= HALF_FOV or delta >= (360 - HALF_FOV) then
-            local offset_degrees = (delta > 180) and (delta - 360) or delta;
-            local offsetX = offset_degrees * spacing_per_deg;
+    local pixelsPerDegree = self:GetWidth() / COMPASS_FOV;
 
+    -- draw the compass lines first
+    for heading = 1, 360 do
+        local angleDelta = MathUtil.GetAngleDelta(currentHeading, heading);
+        if math.abs(angleDelta) <= HALF_FOV then
+            local offsetX = -(angleDelta * pixelsPerDegree);
             if heading % MAJOR_LINE_INCREMENT == 0 then
                 local line = self.MajorLinePool:Acquire();
-                line:SetStartPoint("CENTER", -offsetX, 0);
-                line:SetEndPoint("CENTER", -offsetX, -MAJOR_LINE_HEIGHT);
-
-                --local label = self.LabelFontStringPool:Acquire();
-                --label:SetText(heading);
-                --label:SetPoint("TOP", line, "BOTTOM", 0, -5);
+                line:SetStartPoint("CENTER", offsetX, 0);
+                line:SetEndPoint("CENTER", offsetX, -MAJOR_LINE_HEIGHT);
             elseif heading % MINOR_LINE_INCREMENT == 0 then
                 local line = self.MinorLinePool:Acquire();
-                line:SetStartPoint("CENTER", -offsetX, 0);
-                line:SetEndPoint("CENTER", -offsetX, -MINOR_LINE_HEIGHT);
+                line:SetStartPoint("CENTER", offsetX, 0);
+                line:SetEndPoint("CENTER", offsetX, -MINOR_LINE_HEIGHT);
+            end
+        end
+    end
+
+    local pois = POIUtil.GetPointsOfInterestForCurrentMap();
+    if not pois then
+        return;
+    end
+
+    for _, poiData in pairs(pois) do
+        if ShouldBeVisible(poiData) then
+            local worldPos = poiData.WorldPosition;
+            local angleToPOI = MathUtil.GetAngleToPosition(playerWorldPosition, worldPos);
+            local angleDelta = MathUtil.GetAngleDelta(currentHeading, angleToPOI);
+            local offsetX = -(angleDelta * pixelsPerDegree);
+            local offsetY = -(MAJOR_LINE_HEIGHT + POI_ICON_PADDING);
+
+            local icon = self.IconPool:Acquire();
+            icon:SetPoint("CENTER", self, "CENTER", offsetX, offsetY);
+            icon:SetSize(POI_ICON_SIZE, POI_ICON_SIZE);
+
+            if poiData.AtlasName then
+                local atlasName = poiData.AtlasName;
+                if poiData.TextureKit then
+                    atlasName = ATLAS_WITH_TEXTURE_KIT_PREFIX:format(poiData.TextureKit, atlasName);
+                end
+                icon:SetAtlas(atlasName, false);
+            elseif poiData.TextureIndex then
+                icon:SetTexture("Interface/Minimap/POIIcons");
+                icon:SetTexCoord(C_Minimap.GetPOITextureCoords(poiData.TextureIndex));
             end
 
-            if pois and pois[heading] then
-                local lastIcon, lastData;
-                local distance, normalizedDistance;
-                for i=1, #pois[heading] do
-                    local poiData = pois[heading][i];
-                    local poiPosition = poiData.WorldPosition;
-                    local playerX, playerY = UnitPosition("player");
-                    distance = self:CalculateDistanceToPOI(
-                        poiPosition.x, poiPosition.y, playerX, playerY
-                    );
-                    if distance <= POI_ICON_MAX_DISTANCE then
-                        local icon = self.AreaPOIIconPool:Acquire();
-                        local angle_delta = NormalizeAngle(poiData.NonRoundedAngle - currentHeading);
-                        local offset_angle_degrees = (angle_delta > 180) and (angle_delta - 360) or angle_delta;
-                        local offset = offset_angle_degrees * spacing_per_deg;
-                        icon:SetPoint("CENTER", self, "CENTER", -offset, -(MAJOR_LINE_HEIGHT + 20));
-                        icon:SetSize(POI_ICON_SIZE, POI_ICON_SIZE);
-                        if poiData.TextureIndex then
-                            icon:SetTexture("Interface/Minimap/POIIcons");
-                            icon:SetTexCoord(C_Minimap.GetPOITextureCoords(poiData.TextureIndex));
-                        elseif poiData.AtlasName then
-                            local atlasName = poiData.AtlasName;
-                            if poiData.TextureKitPrefix then
-                                atlasName = ATLAS_WITH_TEXTURE_KIT_PREFIX:format(poiData.TextureKitPrefix, atlasName);
-                            end
-                            icon:SetAtlas(atlasName, false);
-                        end
+            local distance = MathUtil.GetDistanceToPosition(playerWorldPosition, worldPos);
+            local normalizedDistance = self:NormalizePOIDistance(distance);
+            local scale = self:CalculatePOIScaleFromDistance(normalizedDistance);
+            icon:SetScale(scale);
 
-                        normalizedDistance = self:NormalizePOIDistance(distance);
-                        local scale = self:CalculatePOIScaleFromDistance(normalizedDistance);
-                        icon:SetScale(scale);
+            local alpha = self:CalculatePOIAlphaFromDistance(normalizedDistance);
+            icon:SetAlpha(alpha);
 
-                        local alpha = self:CalculatePOIAlphaFromDistance(normalizedDistance);
-                        icon:SetAlpha(alpha);
+            icon:Show();
 
-                        icon:Show();
-                        lastIcon = icon;
-                        lastData = poiData;
-                    end
-                end
-                if math.abs(heading - currentHeading) < POI_LABEL_BUFFER and
-                        lastIcon and lastData and
-                        (normalizedDistance and normalizedDistance < 0.25) then
-                    local label = self.LabelFontStringPool:Acquire();
-                    label:SetText(lastData.Name);
-                    label:SetPoint("TOP", lastIcon, "BOTTOM", 0, -5);
-                end
+            if (math.abs(angleDelta) < POI_FOCUS_BUFFER) and (normalizedDistance < POI_FOCUS_DISTANCE) then
+                local label = self.LabelFontStringPool:Acquire();
+                local text = POI_FOCUS_LABEL_FORMAT:format(poiData.Name, distance);
+                label:SetText(text);
+                label:SetPoint("TOP", icon, "BOTTOM", 0, -5);
             end
         end
     end
 
     self.CurrentHeadingText:SetFormattedText("%d", currentHeading);
+    print("updated!", random());
 end
 
 function CompassBarMixin:NormalizePOIDistance(distance)
     return math.min(distance / POI_ICON_MAX_DISTANCE, 1);
 end
 
-function CompassBarMixin:CalculateDistanceToPOI(poiX, poiY, playerX, playerY)
-    local dx = poiX - playerX;
-    local dy = poiY - playerY;
-    return math.sqrt(dx * dx + dy * dy);
-end
-
 function CompassBarMixin:CalculatePOIScaleFromDistance(normalizedDistance)
-    return POI_ICON_MAX_SCALE - (POI_ICON_MAX_SCALE - POI_ICON_MIN_SCALE) * normalizedDistance;
+    local decay = math.exp(-normalizedDistance * POI_ICON_DECAY_FACTOR);
+    return POI_ICON_MIN_SCALE + (POI_ICON_MAX_SCALE - POI_ICON_MIN_SCALE) * decay;
 end
 
 function CompassBarMixin:CalculatePOIAlphaFromDistance(normalizedDistance)
-    return POI_ICON_MAX_ALPHA - (POI_ICON_MAX_ALPHA - POI_ICON_MIN_ALPHA) * normalizedDistance;
+    local decay = math.exp(-normalizedDistance * POI_ICON_DECAY_FACTOR);
+    return POI_ICON_MIN_ALPHA + (POI_ICON_MAX_ALPHA - POI_ICON_MIN_ALPHA) * decay;
 end

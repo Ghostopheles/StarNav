@@ -7,8 +7,19 @@ function MathUtil.NormalizeAngle(angle)
     return (angle % 360 + 360) % 360;
 end
 
----@param pos1 Vector2DMixin
----@param pos2 Vector2DMixin
+---@param angle1 number Current heading
+---@param angle2 number Target heading
+---@return number angleDelta
+function MathUtil.GetAngleDelta(angle1, angle2)
+    local delta = (angle2 - angle1 + 360) % 360;
+    if delta > 180 then
+        delta = delta - 360;
+    end
+    return delta;
+end
+
+---@param pos1 Vector2DType Start position
+---@param pos2 Vector2DType End position
 ---@return number angle
 function MathUtil.GetAngleToPosition(pos1, pos2)
     local deltaX = pos2.x - pos1.x;
@@ -18,6 +29,15 @@ function MathUtil.GetAngleToPosition(pos1, pos2)
     local normalizedAngleToPoi = MathUtil.NormalizeAngle(angleToPoi);
 
     return normalizedAngleToPoi;
+end
+
+---@param pos1 Vector2DType
+---@param pos2 Vector2DType
+---@return number distance
+function MathUtil.GetDistanceToPosition(pos1, pos2)
+    local dx = pos1.x - pos2.x;
+    local dy = pos1.y - pos2.y;
+    return math.sqrt(dx * dx + dy * dy);
 end
 
 ------------
