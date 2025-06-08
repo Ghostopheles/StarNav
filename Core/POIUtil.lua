@@ -156,6 +156,8 @@ function POICache:GetQuestLinesForMap(uiMapID)
             QuestLineID = questLine.questLineID,
             FloorLocation = questLine.floorLocation
         };
+
+        ---@type StarNav.PointOfInterestData
         local poiData = {
             ID = questID,
             Name = questName,
