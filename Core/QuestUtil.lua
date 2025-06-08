@@ -36,6 +36,11 @@ local QUEST_CLASS_TO_ATLAS = {
     },
     [QUEST_CLASS.WorldQuest] = {
         Normal = "worldquest-questmarker-epic",
+        SuperTracked = "worldquest-questmarker-epic-supertracked"
+    },
+    [QUEST_CLASS.BonusObjective] = {
+        Normal = "QuestBonusObjective",
+        SuperTracked = "questbonusobjective-SuperTracked"
     }
 };
 
@@ -66,6 +71,10 @@ function QuestUtil.GetAtlasForQuest(questID)
 
         if isTrivial and atlasInfo.Trivial then
             return atlasInfo.Trivial;
+        end
+
+        if (C_SuperTrack.GetSuperTrackedQuestID() == questID) and atlasInfo.SuperTracked then
+            return atlasInfo.SuperTracked;
         end
 
         return atlasInfo.Normal;
