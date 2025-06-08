@@ -3,9 +3,14 @@ local function NormalizeAngle(degrees)
 end
 
 local AreaPOICache = {};
+
+local function InvalidateAreaPOICache()
+    AreaPOICache = {};
+end
+
 local f = CreateFrame("Frame");
 f:SetScript("OnEvent", function()
-    AreaPOICache = {};
+    InvalidateAreaPOICache();
 end);
 f:RegisterEvent("AREA_POIS_UPDATED");
 
@@ -107,10 +112,7 @@ local function ProcessQuests(tbl, quests, uiMapID, playerPosition)
                 name = QuestUtils_GetQuestName(quest.questID);
             end
 
-            local atlasName = GetAtlasForQuestID(quest.questID);
-            if not atlasName and quest.isLocalStory then
-                atlasName = "QuestLog-tab-icon-quest";
-            end
+            local atlasName = StarNav.QuestUtil.GetAtlasForQuest(quest.questID);
 
             local poiData = {
                 ID = quest.questID,

@@ -28,8 +28,13 @@ Libs/LibAdvFlight/lib.xml
 
 StarNav.lua
 
+Core/Enum.lua
+Core/Utils.lua
 Core/Events.lua
 Core/SettingsTemplates.xml
 Core/Settings.lua
+Core/MathUtil.lua
+Core/QuestUtil.lua
+Core/POIUtil.lua
 
 Interface/CompassBar.xml

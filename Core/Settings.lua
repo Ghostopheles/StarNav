@@ -70,16 +70,6 @@ end
 
 CreateHeader("Filters");
 do
-    local variable = "STARNAV_ShowQuests";
-    local name = "Show Quests";
-    local tooltip = "Show quests on the compass display";
-    local defaultValue = true;
-
-    local setting = RegisterSetting(variable, name, defaultValue);
-    CreateCheckbox(setting, tooltip);
-end
-
-do
     local variable = "STARNAV_ShowAreaPOI";
     local name = "Show Points of Interest";
     local tooltip = "Show points of interest on the compass display";
@@ -88,4 +78,23 @@ do
     local setting = RegisterSetting(variable, name, defaultValue);
     CreateCheckbox(setting, tooltip);
 end
+do
+    local variable = "STARNAV_ShowQuests";
+    local name = "Show Quests";
+    local tooltip = "Show quests on the compass display";
+    local defaultValue = true;
+
+    local setting = RegisterSetting(variable, name, defaultValue);
+    CreateCheckbox(setting, tooltip);
+end
+do
+    local variable = "STARNAV_ShowQuestLines";
+    local name = "Show Questlines";
+    local tooltip = "Show questline start points on the compass display";
+    local defaultValue = true;
+
+    local setting = RegisterSetting(variable, name, defaultValue);
+    CreateCheckbox(setting, tooltip);
+end
+
 
