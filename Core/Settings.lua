@@ -96,5 +96,14 @@ do
     local setting = RegisterSetting(variable, name, defaultValue);
     CreateCheckbox(setting, tooltip);
 end
+do
+    local variable = "STARNAV_ShowInstances";
+    local name = "Show Instances";
+    local tooltip = "Show instance entrances on the compass display";
+    local defaultValue = true;
+
+    local setting = RegisterSetting(variable, name, defaultValue);
+    CreateCheckbox(setting, tooltip);
+end
 
 

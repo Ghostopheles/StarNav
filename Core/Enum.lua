@@ -11,6 +11,7 @@ Enum.PointOfInterestType = {
     Quest = 6,
     TaskQuest = 7,
     QuestLine = 8,
+    Instance = 9
 };
 
 ------------

@@ -40,7 +40,8 @@ end
 local POICache = {
     AreaPOI = {},
     Quests = {},
-    QuestLines = {}
+    QuestLines = {},
+    Instances = {}
 };
 
 function POICache:InvalidateAreaPOI()
@@ -174,13 +175,45 @@ function POICache:GetQuestLinesForMap(uiMapID)
     return data;
 end
 
+function POICache:GetInstancesForMap(uiMapID)
+    if self.Instances[uiMapID] then
+        return self.Instances[uiMapID];
+    end
+
+    local data = {};
+    local entrances = C_EncounterJournal.GetDungeonEntrancesForMap(uiMapID);
+    for _, entrance in pairs(entrances) do
+        local mapPosition = entrance.position;
+        local _, worldPosition = C_Map.GetWorldPosFromMapPos(uiMapID, mapPosition);
+
+        local misc = {
+            JournalInstanceID = entrance.journalInstanceID
+        };
+
+        ---@type StarNav.PointOfInterestData
+        local poiData = {
+            ID = entrance.areaPoiID,
+            Name = entrance.name,
+            Type = POI_TYPE.Instance,
+            AtlasName = entrance.atlasName,
+            MapPosition = mapPosition,
+            WorldPosition = worldPosition,
+            Misc = misc
+        };
+        tinsert(data, poiData);
+    end
+
+    self.Instances[uiMapID] = data;
+    return data;
+end
+
 ------------
 
 local f = CreateFrame("Frame");
 f:SetScript("OnEvent", function(_, event)
     if event == "AREA_POIS_UPDATED" then
         POICache:InvalidateAreaPOI();
-    elseif event == "QUEST_LOG_UPDATE" then
+    elseif event == "QUEST_LOG_UPDATE" or event == "SUPER_TRACKING_CHANGED" then
         POICache:InvalidateQuests();
         POICache:InvalidateQuestLines();
     end
@@ -209,6 +242,9 @@ function POIUtil.GetPointsOfInterestForMap(uiMapID)
     end
     if Settings.GetSetting("STARNAV_ShowQuestLines") then
         tAppendAll(pointsOfInterest, POICache:GetQuestLinesForMap(uiMapID));
+    end
+    if Settings.GetSetting("STARNAV_ShowInstances") then
+        tAppendAll(pointsOfInterest, POICache:GetInstancesForMap(uiMapID));
     end
 
     return pointsOfInterest;
