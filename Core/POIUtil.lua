@@ -182,6 +182,7 @@ f:SetScript("OnEvent", function(_, event)
         POICache:InvalidateAreaPOI();
     elseif event == "QUEST_LOG_UPDATE" then
         POICache:InvalidateQuests();
+        POICache:InvalidateQuestLines();
     end
 end);
 f:RegisterEvent("AREA_POIS_UPDATED");
