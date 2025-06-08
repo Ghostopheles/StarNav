@@ -335,7 +335,6 @@ function CompassBarMixin:Update(forceUpdate)
     end
 
     self.CurrentHeadingText:SetFormattedText("%d", currentHeading);
-    print("updated!", random());
 end
 
 function CompassBarMixin:NormalizePOIDistance(distance)
