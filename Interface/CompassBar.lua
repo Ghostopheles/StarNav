@@ -129,7 +129,7 @@ function StarNavCompassBarMixin:OnEvent(event, ...)
 end
 
 function StarNavCompassBarMixin:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading)
-    if isInitialLoad or isReloading then
+    if (isInitialLoad or isReloading) and Settings.GetSetting("STARNAV_ShowOnlyWhileDragonriding") then
         local canGlide = LAF.IsAdvFlyEnabled();
         if canGlide and not self:IsShown() then
             self:Show();
@@ -140,11 +140,11 @@ function StarNavCompassBarMixin:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading
 end
 
 function StarNavCompassBarMixin:OnAdvFlyingEnableStateChanged(canGlide)
-    if canGlide then
-        self:FadeIn();
-    else
-        self:FadeOut();
+    if not Settings.GetSetting("STARNAV_ShowOnlyWhileDragonriding") then
+        return;
     end
+
+    self:UpdateVisibility();
 end
 
 local UPDATE_ON = {
@@ -161,6 +161,21 @@ function StarNavCompassBarMixin:OnSettingChanged(variable, value)
     elseif UPDATE_ON[variable] then
         local forceUpdate = true;
         self:Update(forceUpdate);
+    elseif variable == "STARNAV_ShowOnlyWhileDragonriding" then
+        self:UpdateVisibility();
+    end
+end
+
+function StarNavCompassBarMixin:UpdateVisibility()
+    if Settings.GetSetting("STARNAV_ShowOnlyWhileDragonriding") then
+        local canGlide = LAF.IsAdvFlyEnabled();
+        if canGlide and not self:IsShown() then
+            self:FadeIn();
+        elseif not canGlide and self:IsShown() then
+            self:FadeOut();
+        end
+    elseif not self:IsShown() then
+        self:FadeIn();
     end
 end
 
@@ -212,7 +227,8 @@ function StarNavCompassBarMixin:Update(forceUpdate)
 
     if LAST_HEADING
         and math.abs(currentHeading - LAST_HEADING) < COMPASS_UPDATE_DEADZONE
-        and not IsPlayerMoving() then
+        and not IsPlayerMoving()
+        and not forceUpdate then
         return;
     else
         LAST_HEADING = currentHeading;

@@ -67,6 +67,15 @@ do
     local setting = RegisterSetting(variable, name, defaultValue);
     CreateColorPicker(setting, tooltip);
 end
+do
+    local variable = "STARNAV_ShowOnlyWhileDragonriding";
+    local name = "Show only while Dragonriding";
+    local tooltip = "Only show the compass while dragonriding";
+    local defaultValue = false;
+
+    local setting = RegisterSetting(variable, name, defaultValue);
+    CreateCheckbox(setting, tooltip);
+end
 
 CreateHeader("Filters");
 do
