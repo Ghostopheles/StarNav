@@ -1,0 +1,33 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Meorawr/wow-ui-schema/main/UI.xsd">
+
+    <Script file="FocusBox.lua" />
+
+    <Frame name="StarNavFocusBoxTemplate" mixin="StarNavFocusBoxMixin" inherits="ResizeLayoutFrame"
+        hidden="true" virtual="true">
+        <Size x="125" y="75" />
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="FocusArt" atlas="UI-Tuskarr-Highlight-Middle">
+                    <Size x="200" y="65" />
+                    <Anchors>
+                        <Anchor point="TOP" />
+                    </Anchors>
+                </Texture>
+                <Texture parentKey="Background" atlas="CovenantSanctum-Renown-Background-Shadow">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" />
+                        <Anchor point="BOTTOMRIGHT" />
+                        <Anchor point="TOP" relativeKey="$parent.FocusArt" relativePoint="BOTTOM"
+                            y="5" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+
+        <Scripts>
+            <OnLoad method="OnLoad" />
+        </Scripts>
+    </Frame>
+
+</Ui>

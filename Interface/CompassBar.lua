@@ -27,7 +27,7 @@ local POI_ICON_MAX_ALPHA = 1;
 local POI_ICON_DECAY_FACTOR = 3;
 local POI_ICON_PADDING = 20;
 
-local POI_FOCUS_BUFFER = 3; -- degrees between heading and POI direction to show label
+local POI_FOCUS_BUFFER = 10; -- degrees between heading and POI direction to show label
 local POI_FOCUS_DISTANCE = 0.25; -- distance normalized from 0-1
 local POI_FOCUS_LABEL_FORMAT = "%s [%dm]";
 
@@ -59,27 +59,6 @@ local function CreateLinePool(parent, thickness)
     return CreateObjectPool(CreateLine);
 end
 
-local DEFAULT_FONTSTRING_FONT = "GameFontWhite";
-local DEFAULT_FONTSTRING_LAYER = "ARTWORK";
-
----@param parent FrameScriptObject
----@param font string?
----@param layer string?
-local function CreateFontStringPool(parent, font, layer)
-    font = font or DEFAULT_FONTSTRING_FONT;
-    layer = layer or DEFAULT_FONTSTRING_LAYER;
-    local function CreateFontString()
-        local fontString = parent:CreateFontString(nil, layer, font);
-        return fontString;
-    end
-
-    local function ResetFontString(_, fontString)
-        fontString:SetText("");
-    end
-
-    return CreateObjectPool(CreateFontString, ResetFontString);
-end
-
 ------------
 
 StarNavCompassBarMixin = {};
@@ -90,7 +69,6 @@ function StarNavCompassBarMixin:OnLoad()
 
     self.MajorLinePool = CreateLinePool(self, MAJOR_LINE_THICKNESS);
     self.MinorLinePool = CreateLinePool(self, MINOR_LINE_THICKNESS);
-    self.LabelFontStringPool = CreateFontStringPool(self);
     self.IconPool = CreateTexturePool(self, "ARTWORK", nil, nil, function(_, texture)
         texture:SetTexture(nil);
     end);
@@ -265,7 +243,6 @@ function StarNavCompassBarMixin:Update(forceUpdate)
 
     self.MajorLinePool:ReleaseAll();
     self.MinorLinePool:ReleaseAll();
-    self.LabelFontStringPool:ReleaseAll();
     self.IconPool:ReleaseAll();
 
     local pixelsPerDegree = self:GetWidth() / COMPASS_FOV;
@@ -292,6 +269,7 @@ function StarNavCompassBarMixin:Update(forceUpdate)
         return;
     end
 
+    local labelsToFocus = {};
     for _, poiData in pairs(pois) do
         if ShouldBeVisible(poiData) then
             local worldPos = poiData.WorldPosition;
@@ -326,14 +304,13 @@ function StarNavCompassBarMixin:Update(forceUpdate)
             icon:Show();
 
             if (math.abs(angleDelta) < POI_FOCUS_BUFFER) and (normalizedDistance < POI_FOCUS_DISTANCE) then
-                local label = self.LabelFontStringPool:Acquire();
                 local text = POI_FOCUS_LABEL_FORMAT:format(poiData.Name, distance);
-                label:SetText(text);
-                label:SetPoint("TOP", icon, "BOTTOM", 0, -5);
+                tinsert(labelsToFocus, text);
             end
         end
     end
 
+    self.FocusBox:Focus(labelsToFocus);
     self.CurrentHeadingText:SetFormattedText("%d", currentHeading);
 end
 
