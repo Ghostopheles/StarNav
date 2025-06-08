@@ -1,6 +1,4 @@
 local E = StarNav.Enum;
-local Utils = StarNav.Utils;
-local MathUtil = StarNav.MathUtil;
 local Settings = StarNav.Settings;
 local QuestUtil = StarNav.QuestUtil;
 
