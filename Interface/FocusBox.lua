@@ -35,7 +35,7 @@ function StarNavFocusBoxMixin:OnLoad()
 
     -- layout stuff
     local direction = GridLayoutMixin.Direction.BottomToTop;
-    local stride = 5;
+    local stride = 50;
     local paddingX, paddingY = 0, 5;
     self.GridLayout = AnchorUtil.CreateGridLayout(direction, stride, paddingX, paddingY);
     self.InitialAnchor = AnchorUtil.CreateAnchor("TOP", self.FocusArt, "BOTTOM", 0, 0);
@@ -77,6 +77,7 @@ function StarNavFocusBoxMixin:Update()
     for _, text in ipairs(self.FocusedLabels) do
         local label = self.LabelFontStringPool:Acquire();
         label:SetText(text);
+        label.ignoreInLayout = false;
         tinsert(labels, label);
     end
 
@@ -92,5 +93,9 @@ function StarNavFocusBoxMixin:Focus(labels)
 end
 
 function StarNavFocusBoxMixin:Reset()
-    self.LabelFontStringPool:ReleaseAll();
+    for label in self.LabelFontStringPool:EnumerateActive() do
+        label:ClearAllPoints();
+        label.ignoreInLayout = true;
+        self.LabelFontStringPool:Release(label);
+    end
 end
