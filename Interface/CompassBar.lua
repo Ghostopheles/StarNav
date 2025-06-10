@@ -217,8 +217,8 @@ function StarNavCompassBarMixin:GetCurrentHeading()
         return 0;
     end
 
-    local heading = math.deg(facing);
-    return heading;
+    local heading = math.deg(-facing);
+    return MathUtil.NormalizeAngle(heading);
 end
 
 function StarNavCompassBarMixin:ShouldUpdate()
@@ -286,7 +286,7 @@ function StarNavCompassBarMixin:Update(forceUpdate)
     for heading = 1, 360 do
         local angleDelta = MathUtil.GetAngleDelta(currentHeading, heading);
         if math.abs(angleDelta) <= HALF_FOV then
-            local offsetX = -(angleDelta * pixelsPerDegree);
+            local offsetX = angleDelta * pixelsPerDegree;
             if heading % MAJOR_LINE_INCREMENT == 0 then
                 local line = self.MajorLinePool:Acquire();
                 line:SetStartPoint("CENTER", offsetX, 0);
@@ -326,7 +326,7 @@ function StarNavCompassBarMixin:Update(forceUpdate)
             local worldPos = poiData.WorldPosition;
             local angleToPOI = MathUtil.GetAngleToPosition(playerWorldPosition, worldPos);
             local angleDelta = MathUtil.GetAngleDelta(currentHeading, angleToPOI);
-            local offsetX = -(angleDelta * pixelsPerDegree);
+            local offsetX = angleDelta * pixelsPerDegree;
             local offsetY = -(MAJOR_LINE_HEIGHT + POI_ICON_PADDING);
 
             local icon = self.IconPool:Acquire();

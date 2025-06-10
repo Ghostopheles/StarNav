@@ -26,7 +26,7 @@ function MathUtil.GetAngleToPosition(pos1, pos2)
     local deltaY = pos2.y - pos1.y;
     -- atan2 returns the angle in DEGREES (not to be confused with math.atan2 which returns the angle in radians)
     local angleToPoi = atan2(deltaY, deltaX);
-    local normalizedAngleToPoi = MathUtil.NormalizeAngle(angleToPoi);
+    local normalizedAngleToPoi = MathUtil.NormalizeAngle(-angleToPoi);
 
     return normalizedAngleToPoi;
 end
