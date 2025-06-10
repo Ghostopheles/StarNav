@@ -1,23 +1,4 @@
-local DEFAULT_FONTSTRING_FONT = "GameFontWhite";
-local DEFAULT_FONTSTRING_LAYER = "ARTWORK";
-
----@param parent FrameScriptObject
----@param font string?
----@param layer string?
-local function CreateFontStringPool(parent, font, layer)
-    font = font or DEFAULT_FONTSTRING_FONT;
-    layer = layer or DEFAULT_FONTSTRING_LAYER;
-    local function CreateFontString()
-        local fontString = parent:CreateFontString(nil, layer, font);
-        return fontString;
-    end
-
-    local function ResetFontString(_, fontString)
-        fontString:SetText("");
-    end
-
-    return CreateObjectPool(CreateFontString, ResetFontString);
-end
+local Pools = StarNav.Pools;
 
 ------------
 
@@ -30,7 +11,7 @@ function StarNavFocusBoxMixin:OnLoad()
     self.widthPadding = 8;
     self.heightPadding = 8;
 
-    self.LabelFontStringPool = CreateFontStringPool(self);
+    self.LabelFontStringPool = Pools.CreateFontStringPool(self);
     self.FontStringCache = {};
 
     -- layout stuff

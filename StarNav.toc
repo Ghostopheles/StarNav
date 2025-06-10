@@ -28,6 +28,7 @@ Libs/LibAdvFlight/lib.xml
 
 StarNav.lua
 
+Core/Pools.lua
 Core/Enum.lua
 Core/Utils.lua
 Core/Events.lua

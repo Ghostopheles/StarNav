@@ -1,3 +1,4 @@
+local Pools = StarNav.Pools;
 local Events = StarNav.Events;
 local POIUtil = StarNav.POIUtil;
 local MathUtil = StarNav.MathUtil;
@@ -72,6 +73,7 @@ function StarNavCompassBarMixin:OnLoad()
     self.IconPool = CreateTexturePool(self, "ARTWORK", nil, nil, function(_, texture)
         texture:SetTexture(nil);
     end);
+    self.LabelPool = Pools.CreateFontStringPool(self);
 
     -- draw a little box around our 'current heading' text
     self.HeadingBorderLines = {};
@@ -276,6 +278,7 @@ function StarNavCompassBarMixin:Update(forceUpdate)
     self.MajorLinePool:ReleaseAll();
     self.MinorLinePool:ReleaseAll();
     self.IconPool:ReleaseAll();
+    self.LabelPool:ReleaseAll();
 
     local pixelsPerDegree = self:GetWidth() / COMPASS_FOV;
 
@@ -292,6 +295,22 @@ function StarNavCompassBarMixin:Update(forceUpdate)
                 local line = self.MinorLinePool:Acquire();
                 line:SetStartPoint("CENTER", offsetX, 0);
                 line:SetEndPoint("CENTER", offsetX, -MINOR_LINE_HEIGHT);
+            end
+            local labelOffsetY = -(MAJOR_LINE_HEIGHT + 10);
+            local labelText;
+            if heading == 360 then
+                labelText = "N";
+            elseif heading == 90 then
+                labelText = "E";
+            elseif heading == 180 then
+                labelText = "S";
+            elseif heading == 270 then
+                labelText = "W";
+            end
+            if labelText then
+                local label = self.LabelPool:Acquire();
+                label:SetText(labelText);
+                label:SetPoint("CENTER", offsetX, labelOffsetY);
             end
         end
     end
