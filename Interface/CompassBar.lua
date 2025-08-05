@@ -143,6 +143,10 @@ function StarNavCompassBarMixin:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading
 end
 
 function StarNavCompassBarMixin:ZONE_CHANGED_NEW_AREA()
+    if not self:IsShown() then
+        return;
+    end
+
     if IsInInstance() then
         self:FadeOut();
     else

@@ -211,13 +211,14 @@ local f = CreateFrame("Frame");
 f:SetScript("OnEvent", function(_, event)
     if event == "AREA_POIS_UPDATED" then
         POICache:InvalidateAreaPOI();
-    elseif event == "QUEST_LOG_UPDATE" or event == "SUPER_TRACKING_CHANGED" then
+    elseif event == "QUEST_POI_UPDATE" or event == "SUPER_TRACKING_CHANGED" or event == "QUEST_POI_UPDATE" then
         POICache:InvalidateQuests();
         POICache:InvalidateQuestLines();
     end
 end);
 f:RegisterEvent("AREA_POIS_UPDATED");
 f:RegisterEvent("QUEST_POI_UPDATE");
+f:RegisterEvent("QUEST_LOG_UPDATE");
 
 ------------
 
